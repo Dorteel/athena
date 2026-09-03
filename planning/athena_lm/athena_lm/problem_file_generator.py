@@ -11,6 +11,7 @@ from pathlib import Path
 from openai import OpenAI
 from functools import lru_cache
 
+import requests
 from athena_msgs.srv import GenerateProblemFile
 from google import genai
 import ollama
@@ -18,7 +19,7 @@ import ollama
 GPT_MODEL = "gpt-5.2"
 GEMINI_MODEL = "gemini-3-flash-preview"
 OLLAMA_MODEL = "qwen3.5"
-NEBULA_MODEL = "SURF.gemma-4-31B-it-NVFP4"
+NEBULA_MODEL = "FAST.gpt-oss:120b"
 
 NEBULA_BASE_URL = 'https://nebula.cs.vu.nl/api/'
 
@@ -164,15 +165,25 @@ class VlmApi:
 
     @lru_cache()
     def analyze_text_nebula(self, user_prompt, prompt):
-        response = self.nebula_client.responses.create(
-            model=NEBULA_MODEL,
-            temperature=0.0,
-            input=[
-                {"role": "system", "content": [{"type": "input_text", "text": prompt}]},
-                {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]},
-            ],
+        response = requests.post(
+            "https://nebula.cs.vu.nl/api/chat/completions",
+            headers={
+                "Authorization": f"Bearer {nebula_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": NEBULA_MODEL,
+                "messages": [
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": 0.0,
+            },
+            timeout=600,
         )
-        return response.output_text
+
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
 
     @lru_cache()
     def analyze_text_ollama(self, user_prompt, prompt):

@@ -18,9 +18,13 @@ import ollama
 GPT_MODEL = "gpt-5.2"
 GEMINI_MODEL = "gemini-3-flash-preview"
 OLLAMA_MODEL = "qwen3.5"
+NEBULA_MODEL = "SURF.gemma-4-31B-it-NVFP4"
+
+NEBULA_BASE_URL = 'https://nebula.cs.vu.nl/api/'
 
 open_ai_key = os.environ["OPENAI_API_KEY"]
 gemini_api_key = os.environ["GEMINI_API_KEY"]
+nebula_api_key = os.environ["NEBULA_API_KEY"]
 
 LOGICAL_KEYWORDS = {"and", "not", "or", "forall", "exists", "imply", "="}
 
@@ -57,6 +61,7 @@ class VlmApi:
 
         self.predicates = self.domain_predicates(self.domain)
 
+        self.nebula_client = OpenAI(base_url=NEBULA_BASE_URL, api_key=nebula_api_key)
         self.openai_client = OpenAI(api_key=open_ai_key)
         self.gemini_client = genai.Client(api_key=gemini_api_key)
 
@@ -158,6 +163,18 @@ class VlmApi:
         return response.output_text
 
     @lru_cache()
+    def analyze_text_nebula(self, user_prompt, prompt):
+        response = self.nebula_client.responses.create(
+            model=NEBULA_MODEL,
+            temperature=0.0,
+            input=[
+                {"role": "system", "content": [{"type": "input_text", "text": prompt}]},
+                {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]},
+            ],
+        )
+        return response.output_text
+
+    @lru_cache()
     def analyze_text_ollama(self, user_prompt, prompt):
         response = ollama.generate(
             model=OLLAMA_MODEL,
@@ -176,6 +193,8 @@ class VlmApi:
             return self.analyze_text(user_prompt, system_prompt)
         elif "Ollama" in model:
             return self.analyze_text_ollama(user_prompt, system_prompt)
+        elif "Nebula" in model:
+            return self.analyze_text_nebula(user_prompt, system_prompt)
         return ""
 
     def generate_goal(self, instruction, objects, model="ChatGpt"):
@@ -311,7 +330,7 @@ class VlmApiNode(Node):
         super().__init__("VlmApi")
 
         self.declare_parameter("output_file", "problem.pddl")
-        self.declare_parameter("model", "ChatGpt")
+        self.declare_parameter("model", "Nebula")
         self.declare_parameter("check_init", False)
         self.declare_parameter("max_retries", 3)
 

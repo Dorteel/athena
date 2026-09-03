@@ -17,14 +17,18 @@ from athena_msgs.srv import GenerateDomain
 
 LOGICAL_KEYWORDS = {"and", "not", "or", "forall", "exists", "when", "imply", "="}
 
+NEBULA_MODEL = "SURF.gemma-4-31B-it-NVFP4"
+NEBULA_BASE_URL = 'https://nebula.cs.vu.nl/api/'
+nebula_api_key = os.environ["NEBULA_API_KEY"]
 
 class PddlDomainServer(Node):
     def __init__(self):
         super().__init__("domain_file_generator_node")
 
-        self.declare_parameter("backend", "openai")
+        self.declare_parameter("backend", "nebula")
         self.declare_parameter("openai_model", "gpt-5.2")
         self.declare_parameter("ollama_model", "qwen3.5")
+        self.declare_parameter("nebula_model", "SURF.gemma-4-31B-it-NVFP4")
         self.declare_parameter("output_file", "domain.pddl")
         self.declare_parameter("capabilities", "")
         self.declare_parameter("max_retries", 3)
@@ -186,11 +190,18 @@ class PddlDomainServer(Node):
 
         return sorted(set(errors))
 
-    def call_llm(self, backend, openai_model, ollama_model, prompt):
+    def call_llm(self, backend, openai_model, ollama_model, nebula_model, prompt):
         if backend == "openai":
             client = OpenAI()
             resp = client.responses.create(
                 model=openai_model,
+                input=prompt,
+            )
+            return resp.output_text.strip()
+        elif backend == "nebula":
+            client = OpenAI(base_url=NEBULA_BASE_URL, api_key=nebula_api_key)
+            resp = client.responses.create(
+                model=nebula_model,
                 input=prompt,
             )
             return resp.output_text.strip()
@@ -218,13 +229,14 @@ class PddlDomainServer(Node):
         backend = str(self.get_parameter("backend").value).lower()
         openai_model = str(self.get_parameter("openai_model").value)
         ollama_model = str(self.get_parameter("ollama_model").value)
+        nebula_model = str(self.get_parameter("nebula_model").value)
         output_file = str(self.get_parameter("output_file").value)
         capabilities = str(self.get_parameter("capabilities").value)
         max_retries = int(self.get_parameter("max_retries").value)
 
-        if backend not in ("openai", "ollama"):
+        if backend not in ("openai", "ollama", "nebula"):
             response.success = False
-            response.message = f"Unknown backend '{backend}'. Use 'openai' or 'ollama'."
+            response.message = f"Unknown backend '{backend}'. Use 'openai', 'ollama', or 'nebula'."
             self.get_logger().error(response.message)
             return response
 
@@ -313,11 +325,23 @@ Constraints:
 --- end ---
 """.strip()
 
+<<<<<<< HEAD
         prompt = base_prompt
         llm_time = 0.0
         attempts = 0
         actions_text = ""
         errors = []
+=======
+        self.get_logger().info("Generating action blocks...")
+        try:
+            print(f"Calling LLM backend '{backend}' with model '{openai_model if backend == 'openai' else ollama_model if backend == 'ollama' else nebula_model}'...")
+            raw_actions = self.call_llm(backend, openai_model, ollama_model, nebula_model, actions_prompt)
+        except Exception as e:
+            response.success = False
+            response.message = f"Action generation failed ({backend}): {e}"
+            self.get_logger().error(response.message)
+            return response
+>>>>>>> 0823307 (local changes)
 
         while attempts < max_retries:
             attempts += 1

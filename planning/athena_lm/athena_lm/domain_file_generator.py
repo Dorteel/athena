@@ -12,6 +12,7 @@ from std_msgs.msg import String
 import yaml
 from openai import OpenAI
 import ollama
+import requests
 
 from athena_msgs.srv import GenerateDomain
 
@@ -199,12 +200,23 @@ class PddlDomainServer(Node):
             )
             return resp.output_text.strip()
         elif backend == "nebula":
-            client = OpenAI(base_url=NEBULA_BASE_URL, api_key=nebula_api_key)
-            resp = client.responses.create(
-                model=nebula_model,
-                input=prompt,
+            response = requests.post(
+                "https://nebula.cs.vu.nl/api/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {nebula_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": nebula_model,
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ],
+                },
+                timeout=600,
             )
-            return resp.output_text.strip()
+
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"].strip()
         else:
             available = [m["model"] for m in ollama.list()["models"]]
             if ollama_model not in available:

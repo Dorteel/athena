@@ -19,7 +19,7 @@ import ollama
 GPT_MODEL = "gpt-5.2"
 GEMINI_MODEL = "gemini-3-flash-preview"
 OLLAMA_MODEL = "qwen3.5"
-NEBULA_MODEL = "FAST.gpt-oss:120b"
+NEBULA_MODEL = "SURF.Qwen3.5 122B A10B NVFP4" # "FAST.gpt-oss:120b"
 
 NEBULA_BASE_URL = 'https://nebula.cs.vu.nl/api/'
 

@@ -16,9 +16,13 @@ import requests
 
 from athena_msgs.srv import GenerateDomain
 
+<<<<<<< HEAD
 LOGICAL_KEYWORDS = {"and", "not", "or", "forall", "exists", "when", "imply", "="}
 
 NEBULA_MODEL = "SURF.gemma-4-31B-it-NVFP4"
+=======
+NEBULA_MODEL = "SURF.Qwen3.5 122B A10B NVFP4"# "FAST.gpt-oss:120b"
+>>>>>>> 00bbf3a (updated nebula support)
 NEBULA_BASE_URL = 'https://nebula.cs.vu.nl/api/'
 nebula_api_key = os.environ["NEBULA_API_KEY"]
 
@@ -29,7 +33,7 @@ class PddlDomainServer(Node):
         self.declare_parameter("backend", "nebula")
         self.declare_parameter("openai_model", "gpt-5.2")
         self.declare_parameter("ollama_model", "qwen3.5")
-        self.declare_parameter("nebula_model", "SURF.gemma-4-31B-it-NVFP4")
+        self.declare_parameter("nebula_model", "FAST.gpt-oss:120b")
         self.declare_parameter("output_file", "domain.pddl")
         self.declare_parameter("capabilities", "")
         self.declare_parameter("max_retries", 3)

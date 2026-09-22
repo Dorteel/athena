@@ -2,9 +2,7 @@
 
 <BehaviorTree ID="MasterTree">
   <Sequence>
-  <GenerateDomainFile name="GenerateDomainFile" domain_file="{domain_file}"/>
-  <GenerateProblemFile name="GenerateProblemFile" domain_file="{domain_file}" problem_file="{problem_file}"/>
-  <ComputePlan name="ComputePlanAction" planner="MetricFF" execution_plan="{execution_plan}" domain_file="{domain_file}" problem_file="{problem_file}" plan_length="{plan_length}" robots="{robots}"/>
+  <ComputePlan name="ComputePlanAction" planner="MetricFF" execution_plan="{execution_plan}" domain_file="/home/kai/ros2_ws/utils/bringup/tasks/setting_the_table/domain.pddl" problem_file="/home/kai/ros2_ws/utils/bringup/tasks/setting_the_table/problem.pddl" plan_length="{plan_length}" robots="{robots}"/>
   <DispatcherNode name="DispatcherNode" execution_plan="{execution_plan}" completed_actions="{completed_actions}" completed_methods="{completed_methods}" type="action">
     <SendMove name="Move" robot_id="robot1" service_name="move_to_pose"/>
     <SendLoad name="Load" robot_id="robot1" service_name="send_load"/>
@@ -14,3 +12,4 @@
 </BehaviorTree>
 
 </root>
+
